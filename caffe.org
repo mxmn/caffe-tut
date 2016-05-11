@@ -1,8 +1,6 @@
 * Installation on OS-X Macbook without CUDA
 - official installation instructions for Caffe [[http://caffe.berkeleyvision.org/install_osx.html][on OS-X]]
-- Insightful links:
-  [link1](https://gist.github.com/kylemcdonald/0698c7749e483cd43a0e),
-  [link2](http://playittodeath.ru/how-to-install-caffe-on-mac-os-x-yosemite-10-10-4/)
+- Insightful links: [[https://gist.github.com/kylemcdonald/0698c7749e483cd43a0e][link1]], [[http://playittodeath.ru/how-to-install-caffe-on-mac-os-x-yosemite-10-10-4/][link2]]
 - I've tried to install it using Anaconda, but it didn't work
   out. Then I decided to try it with homebrew installed python. One
   has to take particular care to compile everything using the same gcc
@@ -36,15 +34,43 @@
 - For BLAS we can use the Apple Mac provided Accelerate version.
 - Get caffe via:
   : git clone
-- Adapt the Makefile.config file to your needs (cpu_only, paths, etc.)
+- Adapt the Makefile.config file to your needs (=cpu_only=, paths, etc.)
   - IMPORTANT: double-check all paths that they exists and contain the files one needs.
+- Build caffe
+  : make all -j4
+  : make test -j4
+  : make runtest
+  : make pycaffe
+  - Use the =-jN= (N=2, 3, 4, 8, etc.), to use multiple jobs simultaneously
+- Install other python dependencies:
+  : scipy, scikit-image, matplotlib, ..
+  - check the =caffe/python/requirements.txt= file
+  - can do automatically via:
+    : pip install -r requirements.txt
 
 
+- Test that you don't get segmentation fault:
+  : python -c "import caffe"
 
-- Other python dependencies:
-  - scipy, scikit-image
+- Potential errors that I encountered as well:
+  - Copy-pasting lib/include paths into the Makefile (or typing) can
+    be erroneous -- always check that the path exists and that it
+    contains the requested file.
 
+** Highlights
+- *otool -L*: Check shared libraries (=.dylib=), to which C++ or python they are reference to. E.g.
+    : otool -L /usr/local/Cellar/boost/1.60.0_2/lib/libboost_system.dylib
+- *homebrew*
+  - Edit the formula of homebrew packages:
+    : brew edit boost
+  - Delete / reinstall brew packages to enforce correct linking/compiling:
+    : for x in snappy glog szip hdf5 lmdb; do brew uninstall $x; done
+  - Install options:
+    : -vd
+    : --fresh
+    : --with-python
 
+* Old Instructions, to be deleted
 - It's a tricky business to install Caffe on OS-X. To get it installed
   on a Macbook, I had to do the following extra steps, next to the
   official installation instructions.
@@ -88,3 +114,8 @@ brew install --build-from-source --fresh -vd boost boost-python
   : make test -j4
   : make runtest
   : make pycaffe
+
+* COMMENT
+#+AUTHOR: Installation and Experimentation
+#+DATE:
+#+TITLE: Caffe
