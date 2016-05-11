@@ -1,4 +1,50 @@
-* Installation
+* Installation on OS-X Macbook without CUDA
+- official installation instructions for Caffe [[http://caffe.berkeleyvision.org/install_osx.html][on OS-X]]
+- Insightful links:
+  [link1](https://gist.github.com/kylemcdonald/0698c7749e483cd43a0e),
+  [link2](http://playittodeath.ru/how-to-install-caffe-on-mac-os-x-yosemite-10-10-4/)
+- I've tried to install it using Anaconda, but it didn't work
+  out. Then I decided to try it with homebrew installed python. One
+  has to take particular care to compile everything using the same gcc
+  and python libraries. To be extra careful, I uninstalled first all
+  required packages and installed them after setting up python
+  correctly and paying attention to all library and include paths.
+
+: for x in snappy leveldb gflags glog szip hdf5 lmdb homebrew/science/opencv; do brew uninstall $x; done
+: brew uninstall --force protobuf
+: brew uninstall boost boost-python
+
+: brew install python opencv
+
+: for x in snappy leveldb gflags glog szip hdf5 lmdb homebrew/science/opencv; do brew install --fresh -vd $x; done
+: brew install --with-python --fresh -vd protobuf
+: brew install --fresh -vd boost boost-python
+
+- As noted in [[https://gist.github.com/kylemcdonald/0698c7749e483cd43a0e][this link]], all shared libraries that reference C++
+  standard library should use =libc++= and not =libstdc++=; and
+  =boost-python= should be linked against Homebrew-install Python, not
+  the system or anaconda python.
+  - One can check this with =otool -L= followed by the path to the
+    =.dylib= file. One can get the location of the library paths using
+    =brew info=, e.g.:
+    : brew info boost
+    : brew info boost-python
+  - and then look for selectd =.dylib='s, e.g. via
+    : otool -L /usr/local/Cellar/boost/......../libboost_system.dylib
+    : otool -L /usr/local/Cellar/boost-python/......../libboost_python.dylib
+  - they should show the libc++ and python dependencies.
+- For BLAS we can use the Apple Mac provided Accelerate version.
+- Get caffe via:
+  : git clone
+- Adapt the Makefile.config file to your needs (cpu_only, paths, etc.)
+  - IMPORTANT: double-check all paths that they exists and contain the files one needs.
+
+
+
+- Other python dependencies:
+  - scipy, scikit-image
+
+
 - It's a tricky business to install Caffe on OS-X. To get it installed
   on a Macbook, I had to do the following extra steps, next to the
   official installation instructions.
@@ -21,8 +67,24 @@ brew install --build-from-source --with-python --fresh -vd protobuf
 brew install --build-from-source --fresh -vd boost boost-python
 
 
-make clean
-make all -j4
-make test -j4
-make runtest
-make pycaffe
+  - makefile settings (for homebrew installed python):
+    : PYTHON_INCLUDE := /usr/local/include/python2.7 \
+    :            /usr/local/lib/python2.7/site-packages/numpy/core/include \
+    :            /usr/local/Cellar/python/2.7.11/Frameworks/Python.framework/Versions/2.7/include/python2.7
+    : PYTHON_LIB := /usr/local/Cellar/python/2.7.11/Frameworks/Python.framework/Versions/2.7/include/python2.7
+    : PYTHON_LIB += $(shell brew --prefix numpy)/lib
+
+    : # Uncomment to support layers written in Python (will link against Python libs)
+    : WITH_PYTHON_LAYER := 1
+
+    : # Whatever else you find you need goes here.
+    : INCLUDE_DIRS := $(PYTHON_INCLUDE) /usr/local/include
+    : LIBRARY_DIRS := $(PYTHON_LIB) /usr/local/lib /usr/lib
+
+  - and now, 'just' building things..
+
+  : make clean
+  : make all -j4
+  : make test -j4
+  : make runtest
+  : make pycaffe
